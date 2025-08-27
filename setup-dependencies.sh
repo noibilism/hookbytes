@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 APP_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PHP_MIN_VERSION="8.2"
 NODE_MIN_VERSION="18"
-REQUIRED_PHP_EXTENSIONS=("pdo" "pdo_mysql" "pdo_sqlite" "mbstring" "openssl" "tokenizer" "xml" "ctype" "json" "bcmath" "fileinfo" "redis")
+REQUIRED_PHP_EXTENSIONS=("pdo" "pdo_mysql" "pdo_sqlite" "mbstring" "openssl" "tokenizer" "xml" "ctype" "json" "bcmath" "fileinfo" "redis" "zip" "gd" "intl" "soap" "xmlwriter" "simplexml" "dom")
 REQUIRED_SYSTEM_PACKAGES=("git" "curl" "unzip")
 
 echo -e "${BLUE}Laravel Webhook Service - Dependencies Setup${NC}"
@@ -68,15 +68,27 @@ version_ge() {
     printf '%s\n%s\n' "$2" "$1" | sort -V -C
 }
 
-# Check system requirements
+# Check and install system requirements
 check_system_requirements() {
     print_status "Checking system requirements..."
     
-    # Check required system packages
+    # Check and install required system packages
     for package in "${REQUIRED_SYSTEM_PACKAGES[@]}"; do
         if ! command_exists "$package"; then
-            print_error "Required package '$package' is not installed"
-            exit 1
+            print_status "Installing required package: $package"
+            case $PACKAGE_MANAGER in
+                "brew")
+                    brew install "$package"
+                    ;;
+                "apt")
+                    sudo apt-get install -y "$package"
+                    ;;
+                "yum")
+                    sudo yum install -y "$package"
+                    ;;
+            esac
+        else
+            print_status "Package '$package' is already installed"
         fi
     done
     
@@ -130,7 +142,7 @@ check_install_php() {
                 sudo apt-get install -y software-properties-common
                 sudo add-apt-repository ppa:ondrej/php -y
                 sudo apt-get update
-                sudo apt-get install -y php8.2 php8.2-cli php8.2-fpm
+                sudo apt-get install -y php8.2 php8.2-cli php8.2-fpm php8.2-common php8.2-mysql php8.2-sqlite3 php8.2-mbstring php8.2-xml php8.2-bcmath php8.2-zip php8.2-gd php8.2-intl php8.2-redis
                 ;;
             "yum")
                 sudo yum install -y epel-release
@@ -156,6 +168,17 @@ check_install_php() {
                         "pdo_mysql") sudo apt-get install -y php8.2-mysql ;;
                         "pdo_sqlite") sudo apt-get install -y php8.2-sqlite3 ;;
                         "redis") sudo apt-get install -y php8.2-redis ;;
+                        "gd") sudo apt-get install -y php8.2-gd ;;
+                        "intl") sudo apt-get install -y php8.2-intl ;;
+                        "soap") sudo apt-get install -y php8.2-soap ;;
+                        "zip") sudo apt-get install -y php8.2-zip ;;
+                        "xml"|"xmlwriter"|"simplexml"|"dom") sudo apt-get install -y php8.2-xml ;;
+                        "mbstring") sudo apt-get install -y php8.2-mbstring ;;
+                        "bcmath") sudo apt-get install -y php8.2-bcmath ;;
+                        "ctype"|"tokenizer"|"fileinfo"|"openssl"|"json"|"pdo") 
+                            # These are typically included in php8.2-common or php8.2-cli
+                            sudo apt-get install -y php8.2-common php8.2-cli
+                            ;;
                         *) sudo apt-get install -y "php8.2-$ext" ;;
                     esac
                     ;;

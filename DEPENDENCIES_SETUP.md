@@ -21,6 +21,8 @@ The setup script automatically installs and configures:
   - PDO (MySQL and SQLite)
   - mbstring, openssl, tokenizer, xml
   - ctype, json, bcmath, fileinfo
+  - zip, gd, intl, soap
+  - xmlwriter, simplexml, dom
   - Redis extension
 - **Composer** (PHP package manager)
 - **Laravel dependencies** via Composer
@@ -33,6 +35,7 @@ The setup script automatically installs and configures:
 - **Built assets** for production
 
 ### System Requirements
+The script automatically installs these if missing:
 - Git
 - curl
 - unzip
@@ -189,6 +192,21 @@ Access Horizon dashboard at: http://localhost:8000/horizon
 
 ### Common Issues
 
+#### Missing System Packages
+The script now automatically installs missing system packages (git, curl, unzip). If you encounter issues:
+
+```bash
+# Manually install missing packages
+# macOS
+brew install git curl unzip
+
+# Ubuntu/Debian
+sudo apt-get install git curl unzip
+
+# RedHat/CentOS
+sudo yum install git curl unzip
+```
+
 #### Permission Errors
 ```bash
 # Fix storage permissions
@@ -271,7 +289,7 @@ If the automated script fails, you can install dependencies manually:
 brew install php@8.2
 
 # Ubuntu/Debian
-sudo apt-get install php8.2 php8.2-cli php8.2-fpm php8.2-mysql php8.2-sqlite3 php8.2-redis php8.2-mbstring php8.2-xml php8.2-bcmath
+sudo apt-get install php8.2 php8.2-cli php8.2-fpm php8.2-common php8.2-mysql php8.2-sqlite3 php8.2-mbstring php8.2-xml php8.2-bcmath php8.2-zip php8.2-gd php8.2-intl php8.2-soap php8.2-redis
 
 # RedHat/CentOS
 sudo yum install php82 php82-cli php82-mysqlnd php82-sqlite3 php82-redis
