@@ -27,7 +27,8 @@ return new class extends Migration
             $table->softDeletes();
             
             $table->index(['tenant_id', 'active']);
-            $table->index('event_types');
+            // Note: JSON columns cannot be directly indexed in MySQL
+            // Use generated columns if specific JSON path indexing is needed
         });
     }
 
