@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webhook-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+    ports:
+      - "8000:80"
+    networks:
+      - webhook-network
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_HOST=mysql
+      - DB_DATABASE=webhook_service
+      - DB_USERNAME=webhook_user
+      - DB_PASSWORD=webhook_password
+      - REDIS_HOST=redis
+      - QUEUE_CONNECTION=redis
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+
+  mysql:
+    image: mysql:8.0
+    container_name: webhook-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: webhook_service
+      MYSQL_USER: webhook_user
+      MYSQL_PASSWORD: webhook_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    networks:
+      - webhook-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: webhook-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - webhook-network
+
+  horizon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webhook-horizon
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    command: php artisan horizon
+    networks:
+      - webhook-network
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - APP_ENV=local
+      - DB_HOST=mysql
+      - DB_DATABASE=webhook_service
+      - DB_USERNAME=webhook_user
+      - DB_PASSWORD=webhook_password
+      - REDIS_HOST=redis
+      - QUEUE_CONNECTION=redis
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webhook-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    command: >
+      sh -c "while true; do
+        php artisan schedule:run --verbose --no-interaction &
+        sleep 60
+      done"
+    networks:
+      - webhook-network
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - APP_ENV=local
+      - DB_HOST=mysql
+      - DB_DATABASE=webhook_service
+      - DB_USERNAME=webhook_user
+      - DB_PASSWORD=webhook_password
+      - REDIS_HOST=redis
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: webhook-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - webhook-network
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  webhook-network:
+    driver: bridge
