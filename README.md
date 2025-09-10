@@ -80,8 +80,8 @@ HookBytes is built on a modern, scalable architecture:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-org/hookbytes-webhook-gateway.git
-   cd hookbytes-webhook-gateway
+   git clone https://github.com/noibilism/hookbytes.git
+   cd hookbytes
    ```
 
 2. **Install dependencies**
@@ -138,6 +138,23 @@ API_RATE_LIMIT=1000  # requests per hour per project
 ```
 
 ### Production Deployment
+
+#### Quick Ubuntu Deployment
+
+Deploy HookBytes on Ubuntu servers with a single command:
+
+```bash
+wget -O - https://raw.githubusercontent.com/noibilism/hookbytes/main/deploy.sh | bash
+```
+
+The deployment script will:
+- Install all required dependencies (PHP, Nginx, MySQL, Redis, Node.js)
+- Configure the web server and services
+- Prompt for database and SMTP configuration
+- Set up queue workers and supervisor
+- Configure firewall and security settings
+
+#### Manual Production Setup
 
 For production deployment, consider:
 
@@ -264,8 +281,8 @@ HookBytes is open-source software licensed under the [MIT License](LICENSE).
 ## 🆘 Support
 
 - **Documentation**: [docs.hookbytes.dev](https://docs.hookbytes.dev)
-- **Issues**: [GitHub Issues](https://github.com/your-org/hookbytes/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/hookbytes/discussions)
+- **Issues**: [GitHub Issues](https://github.com/noibilism/hookbytes/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/noibilism/hookbytes/discussions)
 - **Community**: [Discord Server](https://discord.gg/hookbytes)
 
 ## 🗺 Roadmap
