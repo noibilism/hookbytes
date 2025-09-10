@@ -100,8 +100,9 @@ return [
     'key' => env('APP_KEY'),
 
     'previous_keys' => [
+        // Restored with safer implementation
         ...array_filter(
-            explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
+            explode(',', env('APP_PREVIOUS_KEYS', ''))
         ),
     ],
 

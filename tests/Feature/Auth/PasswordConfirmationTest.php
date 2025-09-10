@@ -5,10 +5,11 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\TestsWithAuthentication;
 
 class PasswordConfirmationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, TestsWithAuthentication;
 
     public function test_confirm_password_screen_can_be_rendered(): void
     {
@@ -23,9 +24,9 @@ class PasswordConfirmationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post('/confirm-password', [
+        $response = $this->makeAuthenticatedRequest('post', '/confirm-password', [
             'password' => 'password',
-        ]);
+        ], $user);
 
         $response->assertRedirect();
         $response->assertSessionHasNoErrors();
@@ -35,9 +36,9 @@ class PasswordConfirmationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post('/confirm-password', [
+        $response = $this->makeAuthenticatedRequest('post', '/confirm-password', [
             'password' => 'wrong-password',
-        ]);
+        ], $user);
 
         $response->assertSessionHasErrors();
     }

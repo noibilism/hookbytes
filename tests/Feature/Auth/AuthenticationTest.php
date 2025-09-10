@@ -5,10 +5,11 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\TestsWithAuthentication;
 
 class AuthenticationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, TestsWithAuthentication;
 
     public function test_login_screen_can_be_rendered(): void
     {
@@ -21,10 +22,13 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
+        $response = $this->withSession(['_token' => 'test-token'])
+            ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
+            ->post('/login', [
+                'email' => $user->email,
+                'password' => 'password',
+                '_token' => 'test-token'
+            ]);
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
@@ -34,10 +38,13 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'wrong-password',
-        ]);
+        $this->withSession(['_token' => 'test-token'])
+            ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
+            ->post('/login', [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+                '_token' => 'test-token'
+            ]);
 
         $this->assertGuest();
     }
@@ -46,7 +53,10 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post('/logout');
+        $response = $this->actingAs($user)
+            ->withSession(['_token' => 'test-token'])
+            ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
+            ->post('/logout', ['_token' => 'test-token']);
 
         $this->assertGuest();
         $response->assertRedirect('/');

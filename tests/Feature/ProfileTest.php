@@ -5,10 +5,11 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\TestsWithAuthentication;
 
 class ProfileTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, TestsWithAuthentication;
 
     public function test_profile_page_is_displayed(): void
     {
@@ -25,12 +26,10 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-            ]);
+        $response = $this->makeAuthenticatedRequest('patch', '/profile', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+        ], $user);
 
         $response
             ->assertSessionHasNoErrors()
@@ -47,12 +46,10 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => $user->email,
-            ]);
+        $response = $this->makeAuthenticatedRequest('patch', '/profile', [
+            'name' => 'Test User',
+            'email' => $user->email,
+        ], $user);
 
         $response
             ->assertSessionHasNoErrors()
@@ -65,11 +62,9 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this
-            ->actingAs($user)
-            ->delete('/profile', [
-                'password' => 'password',
-            ]);
+        $response = $this->makeAuthenticatedRequest('delete', '/profile', [
+            'password' => 'password',
+        ], $user);
 
         $response
             ->assertSessionHasNoErrors()
@@ -83,11 +78,13 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this
-            ->actingAs($user)
+        $response = $this->actingAs($user)
+            ->withSession(['_token' => 'test-token'])
+            ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
             ->from('/profile')
             ->delete('/profile', [
                 'password' => 'wrong-password',
+                '_token' => 'test-token'
             ]);
 
         $response

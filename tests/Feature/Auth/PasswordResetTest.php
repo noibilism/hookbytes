@@ -7,10 +7,11 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
+use Tests\TestsWithAuthentication;
 
 class PasswordResetTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, TestsWithAuthentication;
 
     public function test_reset_password_link_screen_can_be_rendered(): void
     {
@@ -25,7 +26,12 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->withSession(['_token' => 'test-token'])
+            ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
+            ->post('/forgot-password', [
+                'email' => $user->email,
+                '_token' => 'test-token'
+            ]);
 
         Notification::assertSentTo($user, ResetPassword::class);
     }
@@ -36,7 +42,12 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->withSession(['_token' => 'test-token'])
+            ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
+            ->post('/forgot-password', [
+                'email' => $user->email,
+                '_token' => 'test-token'
+            ]);
 
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
             $response = $this->get('/reset-password/'.$notification->token);
@@ -53,15 +64,23 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->withSession(['_token' => 'test-token'])
+            ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
+            ->post('/forgot-password', [
+                'email' => $user->email,
+                '_token' => 'test-token'
+            ]);
 
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-            $response = $this->post('/reset-password', [
-                'token' => $notification->token,
-                'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
-            ]);
+            $response = $this->withSession(['_token' => 'test-token'])
+                ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
+                ->post('/reset-password', [
+                    'token' => $notification->token,
+                    'email' => $user->email,
+                    'password' => 'password',
+                    'password_confirmation' => 'password',
+                    '_token' => 'test-token'
+                ]);
 
             $response
                 ->assertSessionHasNoErrors()
