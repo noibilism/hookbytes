@@ -278,13 +278,11 @@
                 <a href="/" class="logo">🪝 HookBytes</a>
                 <div class="nav-links">
                     <a href="#features" class="nav-link">Features</a>
-                    <a href="#pricing" class="nav-link">Pricing</a>
                     <a href="https://hookbytes.io" class="nav-link">Docs</a>
                     @auth
                         <a href="{{ route('dashboard') }}" class="btn btn-primary">Dashboard</a>
                     @else
-                        <a href="{{ route('login') }}" class="btn btn-secondary">Login</a>
-                        <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
+                        <a href="{{ route('login') }}" class="btn btn-primary">See Demo</a>
                     @endauth
                 </div>
             </nav>
@@ -300,8 +298,7 @@
                 @auth
                     <a href="{{ route('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
                 @else
-                    <a href="{{ route('register') }}" class="btn btn-primary">Start Free Trial</a>
-                    <a href="{{ route('login') }}" class="btn btn-secondary">Login</a>
+                    <a href="{{ route('login') }}" class="btn btn-primary">See Demo</a>
                 @endauth
                 <a href="https://github.com/noibilism/hookbytes" class="btn btn-secondary">View on GitHub</a>
             </div>
@@ -378,9 +375,8 @@
                 <div class="footer-section">
                     <h4>Product</h4>
                     <a href="#features">Features</a>
-                    <a href="#pricing">Pricing</a>
-                    <a href="https://hookbytes.io">Documentation</a>
-                    <a href="/api/status">Status</a>
+                    <a href="https://hookbytes.io" target="_blank">Documentation</a>
+                    <a href="https://github.com/noibilism/hookbytes" target="_blank">API Reference</a>
                 </div>
                 <div class="footer-section">
                     <h4>Company</h4>
