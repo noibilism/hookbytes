@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\Api\WebhookApiController;
+use App\Http\Controllers\HealthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,10 +42,4 @@ Route::prefix('v1')->middleware('api.auth')->group(function () {
 });
 
 // Health check
-Route::get('/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        'timestamp' => now()->toISOString(),
-        'service' => 'HookBytes Webhook Gateway'
-    ]);
-});
+Route::get('/health', [HealthController::class, 'check']);
