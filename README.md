@@ -280,7 +280,7 @@ HookBytes is open-source software licensed under the [MIT License](LICENSE).
 
 ## 🆘 Support
 
-- **Documentation**: [docs.hookbytes.dev](https://docs.hookbytes.dev)
+- **Documentation**: [hookbytes.io](https://hookbytes.io)
 - **Issues**: [GitHub Issues](https://github.com/noibilism/hookbytes/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/noibilism/hookbytes/discussions)
 - **Community**: [Discord Server](https://discord.gg/hookbytes)
