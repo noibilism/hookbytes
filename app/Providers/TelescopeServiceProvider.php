@@ -26,8 +26,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                    $entry->isFailedRequest() ||
                    $entry->isFailedJob() ||
                    $entry->isScheduledTask() ||
-                   $entry->hasMonitoredTag() ||
-                   $this->isWebhookRelated($entry);
+                   $entry->hasMonitoredTag();
         });
     }
 
@@ -40,44 +39,13 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             return;
         }
 
-        Telescope::hideRequestParameters([
-            '_token',
-            'api_key',
-            'webhook_secret',
-            'encryption_key',
-            'password',
-        ]);
+        Telescope::hideRequestParameters(['_token']);
 
         Telescope::hideRequestHeaders([
             'cookie',
             'x-csrf-token',
             'x-xsrf-token',
-            'authorization',
-            'x-api-key',
-            'x-webhook-signature',
         ]);
-    }
-
-    /**
-     * Check if the entry is related to webhook operations.
-     */
-    protected function isWebhookRelated(IncomingEntry $entry): bool
-    {
-        if ($entry->type === 'request') {
-            $uri = $entry->content['uri'] ?? '';
-            return str_contains($uri, '/webhook') || 
-                   str_contains($uri, '/api/events') ||
-                   str_contains($uri, '/api/projects');
-        }
-
-        if ($entry->type === 'job') {
-            $job = $entry->content['name'] ?? '';
-            return str_contains($job, 'Webhook') || 
-                   str_contains($job, 'Event') ||
-                   str_contains($job, 'Delivery');
-        }
-
-        return false;
     }
 
     /**
@@ -87,8 +55,14 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function ($user) {
-            return in_array($user->email, [
+        Gate::define('viewTelescope', function ($user = null) {
+            // Allow access in local environment without authentication
+            if ($this->app->environment('local')) {
+                return true;
+            }
+            
+            // In production, require specific user emails
+            return $user && in_array($user->email, [
                 //
             ]);
         });

@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: development
+    container_name: hookbytes-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - hookbytes-network
+    depends_on:
+      - redis
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+
+  nginx:
+    image: nginx:alpine
+    container_name: hookbytes-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - hookbytes-network
+    depends_on:
+      - app
+
+
+
+  redis:
+    image: redis:alpine
+    container_name: hookbytes-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - hookbytes-network
+
+
+
+  queue:
+    build:
+      context: .
+      target: development
+    container_name: hookbytes-queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - hookbytes-network
+    depends_on:
+      - app
+      - redis
+    command: php artisan queue:work --verbose --tries=3 --timeout=90
+
+  scheduler:
+    build:
+      context: .
+      target: development
+    container_name: hookbytes-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - hookbytes-network
+    depends_on:
+      - app
+      - redis
+    command: >
+      sh -c "while true; do
+        php artisan schedule:run --verbose --no-interaction
+        sleep 60
+      done"
+
+
+
+networks:
+  hookbytes-network:
+    driver: bridge

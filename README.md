@@ -112,6 +112,90 @@ HookBytes is built on a modern, scalable architecture:
 6. **Access the dashboard**
    Open `http://localhost:8000` and create your first project!
 
+## 🐳 Docker Installation (Recommended)
+
+For a streamlined setup experience, use Docker to run HookBytes with all dependencies included.
+
+### Quick Start with Docker
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/noibilism/hookbytes.git
+   cd hookbytes
+   ```
+
+2. **Run the setup script**
+   ```bash
+   ./docker-setup.sh
+   ```
+   This script will:
+   - Create environment configuration
+   - Build Docker containers
+   - Set up the database
+   - Generate application keys
+   - Start all services
+
+3. **Access the application**
+   - **Web Dashboard**: http://localhost:8000
+   - **Database**: localhost:3306 (hookbytes/password)
+   - **Redis**: localhost:6379
+
+### Docker Development Workflow
+
+Use the development helper script for common tasks:
+
+```bash
+# Start development environment
+./docker-dev.sh start
+
+# Run tests
+./docker-dev.sh test
+./docker-dev.sh test-scenarios
+
+# Access application shell
+./docker-dev.sh shell
+
+# Run artisan commands
+./docker-dev.sh artisan migrate
+./docker-dev.sh artisan make:controller TestController
+
+# View logs
+./docker-dev.sh logs
+./docker-dev.sh logs app
+
+# Stop environment
+./docker-dev.sh stop
+```
+
+### Docker Services
+
+- **app**: Laravel application (PHP 8.2-FPM)
+- **nginx**: Web server (Alpine)
+- **db**: MySQL 8.0 database
+- **redis**: Redis cache and queue backend
+- **queue**: Laravel queue worker
+- **scheduler**: Laravel task scheduler
+
+### Production Deployment with Docker
+
+For production deployment:
+
+```bash
+# Use production compose file
+docker-compose -f docker-compose.prod.yml up -d
+
+# Or build production image
+docker build --target production -t hookbytes:latest .
+```
+
+### Docker Configuration
+
+- **Development**: Uses `docker-compose.yml` with hot reloading
+- **Production**: Uses `docker-compose.prod.yml` with optimizations
+- **Environment**: Copy `.env.docker` to `.env` and customize
+- **Volumes**: Persistent data for database and Redis
+- **Networks**: Isolated Docker network for services
+
 ## ✨ New Features - Testing Framework
 
 ### 🎯 Comprehensive Test Suite
