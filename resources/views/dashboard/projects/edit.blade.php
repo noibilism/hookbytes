@@ -1,7 +1,10 @@
-@extends('layouts.app')
+@extends('layouts.master')
+
+@section('title', 'Edit Project - HookBytes Dashboard')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8">
+
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="mb-8">

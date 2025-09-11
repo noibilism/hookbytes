@@ -1,35 +1,8 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Projects') }}
-        </h2>
-    </x-slot>
+@extends('layouts.master')
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .font-mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
-    </style>
+@section('title', 'Projects - HookBytes Dashboard')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                </div>
-            </div>
-        </nav>
-
-        <!-- Main Content -->
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+@section('content')
             <!-- Header -->
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
                 <h1 class="text-2xl font-bold text-gray-900">Projects</h1>
@@ -169,8 +142,4 @@
         });
     </script>
     @endforeach
-                </div>
-            </div>
-        </div>
-    </div>
-</x-app-layout>
+@endsection

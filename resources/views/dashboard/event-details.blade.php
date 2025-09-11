@@ -1,45 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Event Details - HookBytes Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .font-mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
-    </style>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <!-- Navigation -->
-        <nav class="bg-white shadow-sm border-b">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <a href="{{ route('dashboard') }}" class="text-xl font-bold text-gray-900">HookBytes Dashboard</a>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ route('dashboard.events') }}" class="text-gray-600 hover:text-gray-900">← Back to Events</a>
-                        <a href="/api/docs" class="text-gray-600 hover:text-gray-900">API Docs</a>
-                    </div>
-                </div>
-            </div>
-        </nav>
+@extends('layouts.master')
 
-        <!-- Main Content -->
+@section('title', 'Event Details - HookBytes Dashboard')
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css">
+@endpush
+
+@section('content')
+    <!-- Main Content -->
         <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <!-- Page Header -->
             <div class="mb-8">
@@ -250,7 +218,11 @@
             </div>
         </div>
     </div>
+@endsection
 
+@push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
     <script>
         function copyPayload() {
             const payload = document.getElementById('payload').textContent;
@@ -313,5 +285,4 @@
             });
         }
     </script>
-</body>
-</html>
+@endpush

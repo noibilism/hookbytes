@@ -151,6 +151,88 @@ class WebhookController extends Controller
             'project' => $endpoint->project->name,
             'endpoint' => $endpoint->name,
             'url_path' => $endpoint->url_path,
+            'short_url' => $endpoint->short_url,
+            'auth_method' => $endpoint->auth_method,
+            'is_active' => $endpoint->is_active,
+            'destination_urls' => $endpoint->destination_urls,
+        ]);
+    }
+
+    /**
+     * Handle incoming webhook via short URL
+     */
+    public function handleShort(Request $request, string $shortUrl)
+    {
+        try {
+            // Find the endpoint by short URL
+            $endpoint = WebhookEndpoint::where('short_url', $shortUrl)
+                ->where('is_active', true)
+                ->with('project')
+                ->first();
+
+            if (!$endpoint) {
+                return response()->json(['error' => 'Webhook endpoint not found'], 404);
+            }
+
+            $project = $endpoint->project;
+            
+            if (!$project->is_active) {
+                return response()->json(['error' => 'Project is inactive'], 404);
+            }
+
+            // Authenticate the request
+            if (!$this->authenticateRequest($request, $endpoint)) {
+                return response()->json(['error' => 'Authentication failed'], 401);
+            }
+
+            // Create the event record
+            $event = $this->createEvent($request, $project, $endpoint);
+
+            // Dispatch the event for processing
+            ProcessWebhookEvent::dispatch($event);
+
+            Log::info('Webhook received via short URL', [
+                'project_id' => $project->id,
+                'endpoint_id' => $endpoint->id,
+                'event_id' => $event->event_id,
+                'short_url' => $shortUrl,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'event_id' => $event->event_id,
+                'message' => 'Webhook received and queued for processing'
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Webhook processing error (short URL)', [
+                'error' => $e->getMessage(),
+                'short_url' => $shortUrl,
+            ]);
+
+            return response()->json(['error' => 'Internal server error'], 500);
+        }
+    }
+
+    /**
+     * Get webhook endpoint info via short URL
+     */
+    public function infoShort(string $shortUrl)
+    {
+        $endpoint = WebhookEndpoint::where('short_url', $shortUrl)
+            ->where('is_active', true)
+            ->with('project')
+            ->first();
+
+        if (!$endpoint) {
+            return response()->json(['error' => 'Webhook endpoint not found'], 404);
+        }
+
+        return response()->json([
+            'project' => $endpoint->project->name,
+            'endpoint' => $endpoint->name,
+            'url_path' => $endpoint->url_path,
+            'short_url' => $endpoint->short_url,
             'auth_method' => $endpoint->auth_method,
             'is_active' => $endpoint->is_active,
             'destination_urls' => $endpoint->destination_urls,

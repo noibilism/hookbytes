@@ -4,6 +4,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WebhookTransformationController;
+use App\Http\Controllers\WebhookRoutingRuleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -38,10 +40,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/endpoints/{endpoint}/edit', [DashboardController::class, 'editEndpoint'])->name('dashboard.endpoints.edit');
     Route::patch('/dashboard/endpoints/{endpoint}', [DashboardController::class, 'updateEndpoint'])->name('dashboard.endpoints.update');
     Route::delete('/dashboard/endpoints/{endpoint}', [DashboardController::class, 'deleteEndpoint'])->name('dashboard.endpoints.destroy');
+    Route::post('/dashboard/endpoints/{endpoint}/test', [DashboardController::class, 'testEndpoint'])->name('dashboard.endpoints.test');
+    Route::get('/dashboard/endpoints/{endpoint}/events', [DashboardController::class, 'endpointEvents'])->name('dashboard.endpoints.events');
+    
+    // Webhook Transformations
+    Route::get('/dashboard/endpoints/{endpoint}/transformations', [WebhookTransformationController::class, 'index'])->name('transformations.index');
+    Route::get('/dashboard/endpoints/{endpoint}/transformations/create', [WebhookTransformationController::class, 'create'])->name('transformations.create');
+    Route::post('/dashboard/endpoints/{endpoint}/transformations', [WebhookTransformationController::class, 'store'])->name('transformations.store');
+    Route::get('/dashboard/endpoints/{endpoint}/transformations/{transformation}/edit', [WebhookTransformationController::class, 'edit'])->name('transformations.edit');
+    Route::patch('/dashboard/endpoints/{endpoint}/transformations/{transformation}', [WebhookTransformationController::class, 'update'])->name('transformations.update');
+    Route::delete('/dashboard/endpoints/{endpoint}/transformations/{transformation}', [WebhookTransformationController::class, 'destroy'])->name('transformations.destroy');
+    Route::post('/dashboard/endpoints/{endpoint}/transformations/{transformation}/test', [WebhookTransformationController::class, 'test'])->name('transformations.test');
+    Route::patch('/dashboard/endpoints/{endpoint}/transformations/{transformation}/toggle', [WebhookTransformationController::class, 'toggle'])->name('transformations.toggle');
+    Route::post('/dashboard/endpoints/{endpoint}/transformations/{transformation}/duplicate', [WebhookTransformationController::class, 'duplicate'])->name('transformations.duplicate');
+    
+    // Webhook Routing Rules
+    Route::get('/dashboard/endpoints/{endpoint}/routing-rules', [WebhookRoutingRuleController::class, 'index'])->name('routing-rules.index');
+    Route::get('/dashboard/endpoints/{endpoint}/routing-rules/create', [WebhookRoutingRuleController::class, 'create'])->name('routing-rules.create');
+    Route::post('/dashboard/endpoints/{endpoint}/routing-rules', [WebhookRoutingRuleController::class, 'store'])->name('routing-rules.store');
+    Route::get('/dashboard/endpoints/{endpoint}/routing-rules/{routingRule}/edit', [WebhookRoutingRuleController::class, 'edit'])->name('routing-rules.edit');
+    Route::patch('/dashboard/endpoints/{endpoint}/routing-rules/{routingRule}', [WebhookRoutingRuleController::class, 'update'])->name('routing-rules.update');
+    Route::delete('/dashboard/endpoints/{endpoint}/routing-rules/{routingRule}', [WebhookRoutingRuleController::class, 'destroy'])->name('routing-rules.destroy');
+    Route::patch('/dashboard/endpoints/{endpoint}/routing-rules/{routingRule}/toggle', [WebhookRoutingRuleController::class, 'toggle'])->name('routing-rules.toggle');
+    Route::post('/dashboard/endpoints/{endpoint}/routing-rules/{routingRule}/duplicate', [WebhookRoutingRuleController::class, 'duplicate'])->name('routing-rules.duplicate');
     
     // Settings
     Route::get('/dashboard/settings', [SettingsController::class, 'index'])->name('dashboard.settings');
     Route::post('/dashboard/settings', [SettingsController::class, 'update'])->name('dashboard.settings.update');
+    Route::put('/dashboard/settings/general', [SettingsController::class, 'updateGeneral'])->name('dashboard.settings.general.update');
+    Route::put('/dashboard/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('dashboard.settings.notifications.update');
+    Route::put('/dashboard/settings/security', [SettingsController::class, 'updateSecurity'])->name('dashboard.settings.security.update');
     
     // API Documentation
     Route::get('/dashboard/api-docs', [DashboardController::class, 'apiDocs'])->name('dashboard.api-docs');

@@ -6,6 +6,8 @@ use App\Models\Event;
 use App\Models\EventDelivery;
 use App\Models\Settings;
 use App\Jobs\HandleFailedWebhookEvent;
+use App\Services\WebhookTransformationService;
+use App\Services\WebhookRoutingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -46,12 +48,52 @@ class ProcessWebhookEvent implements ShouldQueue
             ]);
 
             $endpoint = $this->event->webhookEndpoint;
-            $destinationUrls = $endpoint->destination_urls;
+
+            // Apply transformations to the payload
+            $transformationService = app(WebhookTransformationService::class);
+            $transformedPayload = $transformationService->applyTransformations(
+                $endpoint,
+                $this->event->payload,
+                $this->event->headers ?? []
+            );
+
+            // Apply routing rules
+            $routingService = app(WebhookRoutingService::class);
+            $routingResult = $routingService->evaluateRouting(
+                $endpoint,
+                $transformedPayload,
+                $this->event->headers ?? []
+            );
+
+            // Handle drop action
+            if ($routingResult['action'] === 'drop') {
+                $this->event->update([
+                    'status' => 'dropped',
+                    'delivered_at' => now(),
+                ]);
+
+                Log::info('Event dropped by routing rule', [
+                    'event_id' => $this->event->event_id,
+                    'rule_name' => $routingResult['rule']->name ?? 'Unknown',
+                ]);
+                return;
+            }
+
+            // Get destinations from routing result
+            $destinations = $routingResult['destinations'];
+            if (empty($destinations)) {
+                Log::warning('No destinations found for event', [
+                    'event_id' => $this->event->event_id,
+                ]);
+                $this->event->update(['status' => 'failed']);
+                return;
+            }
 
             $allSuccessful = true;
 
-            foreach ($destinationUrls as $url) {
-                $success = $this->deliverToDestination($url);
+            foreach ($destinations as $destination) {
+                $url = is_array($destination) ? $destination['url'] : $destination;
+                $success = $this->deliverToDestination($url, $transformedPayload);
                 if (!$success) {
                     $allSuccessful = false;
                 }
@@ -65,7 +107,7 @@ class ProcessWebhookEvent implements ShouldQueue
 
                 Log::info('Event delivered successfully', [
                     'event_id' => $this->event->event_id,
-                    'destinations' => count($destinationUrls),
+                    'destinations' => count($destinations),
                 ]);
             } else {
                 $this->event->update(['status' => 'failed']);
@@ -89,17 +131,18 @@ class ProcessWebhookEvent implements ShouldQueue
     /**
      * Deliver event to a specific destination
      */
-    private function deliverToDestination(string $url): bool
+    private function deliverToDestination(string $url, array $payload = null): bool
     {
         $startTime = microtime(true);
         $attemptNumber = $this->event->deliveries()->where('destination_url', $url)->count() + 1;
 
         try {
-            $headers = $this->buildHeaders();
+            $payloadToSend = $payload ?? $this->event->payload;
+            $headers = $this->buildHeaders($payloadToSend);
             
             $response = Http::timeout(30)
                 ->withHeaders($headers)
-                ->post($url, $this->event->payload);
+                ->post($url, $payloadToSend);
 
             $latency = (int) ((microtime(true) - $startTime) * 1000);
             $isSuccess = $response->successful();
@@ -141,7 +184,7 @@ class ProcessWebhookEvent implements ShouldQueue
     /**
      * Build headers for the webhook request
      */
-    private function buildHeaders(): array
+    private function buildHeaders(array $payload = null): array
     {
         $headers = [
             'Content-Type' => 'application/json',
@@ -160,8 +203,8 @@ class ProcessWebhookEvent implements ShouldQueue
 
         // Add HMAC signature if configured
         if ($endpoint->auth_method === 'hmac' && $endpoint->auth_secret) {
-            $payload = json_encode($this->event->payload);
-            $signature = 'sha256=' . hash_hmac('sha256', $payload, $endpoint->auth_secret);
+            $payloadForSignature = json_encode($payload ?? $this->event->payload);
+            $signature = 'sha256=' . hash_hmac('sha256', $payloadForSignature, $endpoint->auth_secret);
             $headers['X-Signature-256'] = $signature;
         }
 

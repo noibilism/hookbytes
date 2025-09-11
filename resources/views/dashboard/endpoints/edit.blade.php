@@ -1,12 +1,8 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Edit Webhook Endpoint') }}
-        </h2>
-    </x-slot>
+@extends('layouts.master')
 
-    <script src="https://cdn.tailwindcss.com"></script>
+@section('title', 'Edit Webhook Endpoint - HookBytes Dashboard')
 
+@section('content')
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -48,7 +44,7 @@
             <div class="bg-white shadow rounded-lg">
                 <form action="{{ route('dashboard.endpoints.update', $endpoint) }}" method="POST" class="p-6" onsubmit="prepareDestinationUrls()">
                     @csrf
-                    @method('PUT')
+                    @method('PATCH')
 
                     <!-- Basic Information -->
                     <div class="mb-8">
@@ -168,6 +164,52 @@
                         </div>
                     </div>
 
+                    <!-- Headers Configuration -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Custom Headers</h3>
+                        <div class="space-y-4">
+                            @if($endpoint->headers_config && count($endpoint->headers_config) > 0)
+                                @foreach($endpoint->headers_config as $key => $value)
+                                    <div class="flex space-x-3">
+                                        <div class="flex-1">
+                                            <input type="text" name="header_keys[]" value="{{ $key }}" 
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                placeholder="Header name (e.g., X-Custom-Header)">
+                                        </div>
+                                        <div class="flex-1">
+                                            <input type="text" name="header_values[]" value="{{ $value }}"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                placeholder="Header value">
+                                        </div>
+                                        <button type="button" onclick="removeHeaderRow(this)" class="px-3 py-2 text-red-600 hover:text-red-800">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="flex space-x-3">
+                                    <div class="flex-1">
+                                        <input type="text" name="header_keys[]" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Header name (e.g., X-Custom-Header)">
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="text" name="header_values[]"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Header value">
+                                    </div>
+                                    <button type="button" onclick="removeHeaderRow(this)" class="px-3 py-2 text-red-600 hover:text-red-800">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                        <button type="button" onclick="addHeaderRow()" class="mt-3 px-4 py-2 text-blue-600 hover:text-blue-800 text-sm">
+                            <i class="fas fa-plus mr-1"></i>Add Header
+                        </button>
+                        <p class="text-sm text-gray-500 mt-2">Custom headers to include with webhook deliveries</p>
+                    </div>
+
                     <!-- URL Preview -->
                     <div class="mb-8">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Webhook URL Preview</h3>
@@ -222,7 +264,9 @@
             </div>
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script>
         // Update URL preview when slug changes
         document.getElementById('slug').addEventListener('input', function() {
@@ -379,10 +423,40 @@
             const log = document.getElementById('event-log');
             log.innerHTML = '<div class="text-gray-500">No events yet. Click "Start Listening" to monitor incoming webhooks.</div>';
         }
+
+        function addHeaderRow() {
+            const container = document.querySelector('.space-y-4');
+            const newRow = document.createElement('div');
+            newRow.className = 'flex space-x-3';
+            newRow.innerHTML = `
+                <div class="flex-1">
+                    <input type="text" name="header_keys[]" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Header name (e.g., X-Custom-Header)">
+                </div>
+                <div class="flex-1">
+                    <input type="text" name="header_values[]"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Header value">
+                </div>
+                <button type="button" onclick="removeHeaderRow(this)" class="px-3 py-2 text-red-600 hover:text-red-800">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(newRow);
+        }
+
+        function removeHeaderRow(button) {
+            const row = button.closest('.flex');
+            const container = row.parentElement;
+            if (container.children.length > 1) {
+                row.remove();
+            }
+        }
     </script>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</x-app-layout>
+@endpush

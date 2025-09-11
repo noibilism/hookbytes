@@ -1,70 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $project->name }} - HookBytes Dashboard</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'JetBrains Mono', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', Consolas, 'Courier New', monospace;
-        }
-        .font-mono {
-            font-family: 'JetBrains Mono', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', Consolas, 'Courier New', monospace;
-        }
-    </style>
-</head>
-<body class="bg-gray-100">
-    <div class="min-h-screen">
-        <!-- Navigation -->
-        <nav class="bg-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <a href="{{ route('dashboard') }}" class="text-xl font-bold text-gray-800">HookBytes</a>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('dashboard') ? 'bg-gray-100' : '' }}">
-                            <i class="fas fa-tachometer-alt mr-1"></i> Dashboard
-                        </a>
-                        <a href="{{ route('dashboard.events') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('dashboard.events') ? 'bg-gray-100' : '' }}">
-                            <i class="fas fa-bolt mr-1"></i> Events
-                        </a>
-                        <a href="{{ route('dashboard.projects') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('dashboard.projects*') ? 'bg-gray-100' : '' }}">
-                            <i class="fas fa-folder mr-1"></i> Projects
-                        </a>
-                        <a href="{{ route('dashboard.settings') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('dashboard.settings*') ? 'bg-gray-100' : '' }}">
-                            <i class="fas fa-cog mr-1"></i> Settings
-                        </a>
-                        <a href="#" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                            <i class="fas fa-book mr-1"></i> API Docs
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </nav>
+@extends('layouts.master')
 
-        <!-- Main Content -->
-        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+@section('title', $project->name . ' - HookBytes Dashboard')
+
+@section('content')
             <!-- Header -->
             <div class="mb-6">
                 <div class="flex items-center mb-2">
-                    <a href="{{ route('dashboard.projects') }}" class="text-gray-500 hover:text-gray-700 mr-2">
+                    <a href="{{ route('dashboard.projects') }}" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 mr-2">
                         <i class="fas fa-arrow-left"></i>
                     </a>
-                    <h1 class="text-2xl font-bold text-gray-900">{{ $project->name }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $project->name }}</h1>
                     <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $project->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                         {{ $project->is_active ? 'Active' : 'Inactive' }}
                     </span>
                 </div>
                 @if($project->description)
-                    <p class="text-gray-600">{{ $project->description }}</p>
+                    <p class="text-gray-600 dark:text-gray-400">{{ $project->description }}</p>
                 @endif
             </div>
 
@@ -227,11 +178,25 @@
                                             <div class="text-sm text-gray-500">{{ $endpoint->slug }}</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="flex items-center">
-                                                <code class="bg-gray-100 px-2 py-1 rounded text-sm text-gray-800 mr-2">{{ url('/api/webhook/' . $endpoint->url_path) }}</code>
-                                                <button onclick="copyToClipboard('{{ url('/api/webhook/' . $endpoint->url_path) }}')" class="text-gray-400 hover:text-gray-600">
-                                                    <i class="fas fa-copy"></i>
-                                                </button>
+                                            <div class="space-y-2">
+                                                <!-- Original URL -->
+                                                <div class="flex items-center">
+                                                    <span class="text-xs text-gray-500 mr-2 w-12">Full:</span>
+                                                    <code class="bg-gray-100 px-2 py-1 rounded text-sm text-gray-800 mr-2 flex-1">{{ url('/api/webhook/' . $endpoint->url_path) }}</code>
+                                                    <button onclick="copyToClipboard('{{ url('/api/webhook/' . $endpoint->url_path) }}')" class="text-gray-400 hover:text-gray-600">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                                <!-- Short URL -->
+                                                @if($endpoint->short_url)
+                                                <div class="flex items-center">
+                                                    <span class="text-xs text-gray-500 mr-2 w-12">Short:</span>
+                                                    <code class="bg-blue-50 px-2 py-1 rounded text-sm text-blue-800 mr-2 flex-1">{{ url('/api/w/' . $endpoint->short_url) }}</code>
+                                                    <button onclick="copyToClipboard('{{ url('/api/w/' . $endpoint->short_url) }}')" class="text-gray-400 hover:text-gray-600">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                                @endif
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
@@ -248,13 +213,19 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-2">
-                                                <a href="{{ route('dashboard.endpoints.edit', $endpoint) }}" class="text-blue-600 hover:text-blue-900">
+                                                <a href="{{ route('routing-rules.index', $endpoint) }}" class="text-green-600 hover:text-green-900" title="Manage Routing Rules">
+                                                    <i class="fas fa-route"></i>
+                                                </a>
+                                                <a href="{{ route('transformations.index', $endpoint) }}" class="text-purple-600 hover:text-purple-900" title="Manage Transformations">
+                                                    <i class="fas fa-magic"></i>
+                                                </a>
+                                                <a href="{{ route('dashboard.endpoints.edit', $endpoint) }}" class="text-blue-600 hover:text-blue-900" title="Edit Endpoint">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <form action="{{ route('dashboard.endpoints.destroy', $endpoint) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this endpoint?')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-900">
+                                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Delete Endpoint">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -321,174 +292,173 @@
                     </div>
                 </div>
             @endif
-        </div>
-    </div>
+@endsection
 
-    <script>
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(function() {
-                // You could add a toast notification here
-                console.log('Copied to clipboard: ' + text);
-            });
-        }
+@push('scripts')
+<script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            // You could add a toast notification here
+            console.log('Copied to clipboard: ' + text);
+        });
+    }
 
-        // Initialize events chart
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('/dashboard/projects/{{ $project->id }}/events-chart', {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                Highcharts.chart('projectEventsChart', {
-                    chart: {
-                        type: 'column',
-                        backgroundColor: 'transparent'
-                    },
+    // Initialize events chart
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/dashboard/projects/{{ $project->id }}/events-chart', {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            Highcharts.chart('projectEventsChart', {
+                chart: {
+                    type: 'column',
+                    backgroundColor: 'transparent'
+                },
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    categories: data.categories,
                     title: {
-                        text: null
-                    },
-                    xAxis: {
-                        categories: data.categories,
-                        title: {
-                            text: 'Hour of Day',
-                            style: {
-                                fontFamily: 'Inter, sans-serif',
-                                fontSize: '12px',
-                                color: '#6B7280'
-                            }
-                        },
-                        labels: {
-                            style: {
-                                fontFamily: 'Inter, sans-serif',
-                                fontSize: '11px',
-                                color: '#6B7280'
-                            }
-                        }
-                    },
-                    yAxis: {
-                        title: {
-                            text: 'Number of Events',
-                            style: {
-                                fontFamily: 'Inter, sans-serif',
-                                fontSize: '12px',
-                                color: '#6B7280'
-                            }
-                        },
-                        labels: {
-                            style: {
-                                fontFamily: 'Inter, sans-serif',
-                                fontSize: '11px',
-                                color: '#6B7280'
-                            }
-                        },
-                        stackLabels: {
-                            enabled: true,
-                            style: {
-                                fontFamily: 'Inter, sans-serif',
-                                fontSize: '10px',
-                                color: '#6B7280'
-                            }
-                        }
-                    },
-                    legend: {
-                        enabled: true,
-                        itemStyle: {
-                            fontFamily: 'Inter, sans-serif',
-                            fontSize: '12px',
-                            color: '#374151'
-                        }
-                    },
-                    plotOptions: {
-                        column: {
-                            stacking: 'normal',
-                            borderWidth: 0,
-                            pointPadding: 0.1,
-                            groupPadding: 0.1
-                        }
-                    },
-                    tooltip: {
+                        text: 'Hour of Day',
                         style: {
                             fontFamily: 'Inter, sans-serif',
-                            fontSize: '12px'
-                        },
-                        formatter: function() {
-                            return '<b>' + this.x + '</b><br/>' +
-                                   this.series.name + ': ' + this.y + '<br/>' +
-                                   'Total: ' + this.point.stackTotal;
+                            fontSize: '12px',
+                            color: '#6B7280'
                         }
                     },
-                    series: [{
-                        name: 'Successful Events',
-                        data: data.successful,
-                        color: '#10B981'
-                    }, {
-                        name: 'Failed Events',
-                        data: data.failed,
-                        color: '#EF4444'
-                    }],
-                    credits: {
-                        enabled: false
+                    labels: {
+                        style: {
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '11px',
+                            color: '#6B7280'
+                        }
                     }
-                });
-            })
-            .catch(error => {
-                console.error('Error loading chart data:', error);
-                document.getElementById('projectEventsChart').innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fas fa-exclamation-triangle text-2xl mb-2"></i><br/>Unable to load chart data</div>';
-            });
-        });
-
-        // Copy to clipboard function
-        function copyToClipboard(elementId) {
-            const element = document.getElementById(elementId);
-            const textToCopy = element.value;
-            
-            // Create a temporary textarea to copy the text
-            const tempTextarea = document.createElement('textarea');
-            tempTextarea.value = textToCopy;
-            document.body.appendChild(tempTextarea);
-            tempTextarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempTextarea);
-            
-            // Show feedback
-            const button = event.target.closest('button');
-            const originalText = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
-            button.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700');
-            button.classList.add('bg-green-500');
-            
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.classList.remove('bg-green-500');
-                if (elementId === 'api-key') {
-                    button.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                } else {
-                    button.classList.add('bg-green-600', 'hover:bg-green-700');
+                },
+                yAxis: {
+                    title: {
+                        text: 'Number of Events',
+                        style: {
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '12px',
+                            color: '#6B7280'
+                        }
+                    },
+                    labels: {
+                        style: {
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '11px',
+                            color: '#6B7280'
+                        }
+                    },
+                    stackLabels: {
+                        enabled: true,
+                        style: {
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '10px',
+                            color: '#6B7280'
+                        }
+                    }
+                },
+                legend: {
+                    enabled: true,
+                    itemStyle: {
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '12px',
+                        color: '#374151'
+                    }
+                },
+                plotOptions: {
+                    column: {
+                        stacking: 'normal',
+                        borderWidth: 0,
+                        pointPadding: 0.1,
+                        groupPadding: 0.1
+                    }
+                },
+                tooltip: {
+                    style: {
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '12px'
+                    },
+                    formatter: function() {
+                        return '<b>' + this.x + '</b><br/>' +
+                               this.series.name + ': ' + this.y + '<br/>' +
+                               'Total: ' + this.point.stackTotal;
+                    }
+                },
+                series: [{
+                    name: 'Successful Events',
+                    data: data.successful,
+                    color: '#10B981'
+                }, {
+                    name: 'Failed Events',
+                    data: data.failed,
+                    color: '#EF4444'
+                }],
+                credits: {
+                    enabled: false
                 }
-            }, 2000);
-        }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading chart data:', error);
+            document.getElementById('projectEventsChart').innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fas fa-exclamation-triangle text-2xl mb-2"></i><br/>Unable to load chart data</div>';
+        });
+    });
 
-        // Toggle secret visibility
-        function toggleSecretVisibility(elementId) {
-            const element = document.getElementById(elementId);
-            const eyeIcon = document.getElementById(elementId + '-eye');
-            const buttonText = document.getElementById(elementId + '-text');
-            
-            if (element.type === 'password') {
-                element.type = 'text';
-                eyeIcon.classList.remove('fa-eye');
-                eyeIcon.classList.add('fa-eye-slash');
-                buttonText.textContent = 'Hide';
+    // Copy to clipboard function
+    function copyToClipboard(elementId) {
+        const element = document.getElementById(elementId);
+        const textToCopy = element.value;
+        
+        // Create a temporary textarea to copy the text
+        const tempTextarea = document.createElement('textarea');
+        tempTextarea.value = textToCopy;
+        document.body.appendChild(tempTextarea);
+        tempTextarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextarea);
+        
+        // Show feedback
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
+        button.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700');
+        button.classList.add('bg-green-500');
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('bg-green-500');
+            if (elementId === 'api-key') {
+                button.classList.add('bg-blue-600', 'hover:bg-blue-700');
             } else {
-                element.type = 'password';
-                eyeIcon.classList.remove('fa-eye-slash');
-                eyeIcon.classList.add('fa-eye');
-                buttonText.textContent = 'Show';
+                button.classList.add('bg-green-600', 'hover:bg-green-700');
             }
+        }, 2000);
+    }
+
+    // Toggle secret visibility
+    function toggleSecretVisibility(elementId) {
+        const element = document.getElementById(elementId);
+        const eyeIcon = document.getElementById(elementId + '-eye');
+        const buttonText = document.getElementById(elementId + '-text');
+        
+        if (element.type === 'password') {
+            element.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+            buttonText.textContent = 'Hide';
+        } else {
+            element.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+            buttonText.textContent = 'Show';
         }
-    </script>
-</body>
-</html>
+    }
+</script>
+@endpush

@@ -424,9 +424,20 @@ class DashboardController extends Controller
             'destination_urls' => 'required|array|min:1',
             'destination_urls.*' => 'required|url',
             'auth_method' => 'required|in:hmac,shared_secret,none',
+            'retry_config' => 'nullable|array',
+            'headers_config' => 'nullable|array',
         ]);
 
-        $slug = Str::slug($request->name);
+        $baseSlug = Str::slug($request->name);
+        $slug = $baseSlug;
+        $counter = 1;
+        
+        // Ensure slug uniqueness within the project
+        while ($project->webhookEndpoints()->where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+        
         $urlPath = $project->slug . '/' . $slug;
 
         $endpoint = $project->webhookEndpoints()->create([
@@ -436,6 +447,8 @@ class DashboardController extends Controller
             'destination_urls' => $request->destination_urls,
             'auth_method' => $request->auth_method,
             'auth_secret' => $request->auth_method !== 'none' ? Str::random(32) : null,
+            'retry_config' => $request->retry_config,
+            'headers_config' => $request->headers_config,
         ]);
 
         return redirect()->route('dashboard.endpoints.create', $project)
@@ -462,7 +475,22 @@ class DashboardController extends Controller
             'destination_urls.*' => 'required|url',
             'auth_method' => 'required|in:hmac,shared_secret,none',
             'is_active' => 'boolean',
+            'header_keys' => 'nullable|array',
+            'header_values' => 'nullable|array',
         ]);
+
+        // Process headers configuration
+        $headersConfig = [];
+        if ($request->header_keys && $request->header_values) {
+            $keys = array_filter($request->header_keys);
+            $values = array_filter($request->header_values);
+            
+            foreach ($keys as $index => $key) {
+                if (isset($values[$index]) && !empty(trim($key)) && !empty(trim($values[$index]))) {
+                    $headersConfig[trim($key)] = trim($values[$index]);
+                }
+            }
+        }
 
         $endpoint->update([
             'name' => $request->name,
@@ -470,6 +498,7 @@ class DashboardController extends Controller
             'auth_method' => $request->auth_method,
             'auth_secret' => $request->auth_method !== 'none' ? ($endpoint->auth_secret ?: Str::random(32)) : null,
             'is_active' => $request->boolean('is_active', true),
+            'headers_config' => $headersConfig,
         ]);
 
         return redirect()->route('dashboard.projects.show', $endpoint->project)
@@ -554,6 +583,73 @@ class DashboardController extends Controller
                 'message' => 'Failed to retry events: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Test webhook endpoint
+     */
+    public function testEndpoint(Request $request, WebhookEndpoint $endpoint)
+    {
+        $request->validate([
+            'payload' => 'required|array',
+            'headers' => 'nullable|array',
+        ]);
+
+        try {
+            // Create a test event
+            $testEvent = Event::create([
+                'project_id' => $endpoint->project_id,
+                'webhook_endpoint_id' => $endpoint->id,
+                'event_type' => 'test',
+                'payload' => $request->payload,
+                'headers' => $request->headers ?? [],
+                'status' => 'pending',
+            ]);
+
+            // Dispatch the webhook processing job
+            ProcessWebhookEvent::dispatch($testEvent);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test webhook sent successfully',
+                'event_id' => $testEvent->id,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send test webhook: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Show endpoint events
+     */
+    public function endpointEvents(Request $request, WebhookEndpoint $endpoint)
+    {
+        $query = Event::where('webhook_endpoint_id', $endpoint->id)
+            ->orderBy('created_at', 'desc');
+
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('event_type')) {
+            $query->where('event_type', $request->event_type);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $events = $query->get();
+
+        return view('dashboard.endpoints.events', compact('endpoint', 'events'));
     }
 
     /**

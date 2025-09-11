@@ -1,12 +1,8 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Create Webhook Endpoint') }}
-        </h2>
-    </x-slot>
+@extends('layouts.master')
 
-    <script src="https://cdn.tailwindcss.com"></script>
+@section('title', 'Create Webhook Endpoint - HookBytes Dashboard')
 
+@section('content')
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -179,7 +175,7 @@
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Webhook URL Preview</h3>
                         <div class="bg-gray-50 p-4 rounded-lg">
                             <p class="text-sm text-gray-600 mb-2">Your webhook URL will be:</p>
-                            <code id="url_preview" class="bg-white px-3 py-2 rounded border text-sm text-gray-800">{{ url('/api/webhook/') }}/[slug]</code>
+                            <code id="url_preview" class="bg-white px-3 py-2 rounded border text-sm text-gray-800">{{ url('/api/webhook/') }}[project-slug]/[endpoint-slug]</code>
                             <p class="text-sm text-gray-500 mt-2">External services will send webhook data to this URL</p>
                         </div>
                     </div>
@@ -267,7 +263,9 @@
             @endif
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script>
         let currentWebhookUrl = '';
         
@@ -581,4 +579,5 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+    </script>
+@endpush

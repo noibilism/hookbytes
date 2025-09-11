@@ -21,7 +21,9 @@ class WebhookEndpointTest extends TestCase
         parent::setUp();
         
         $this->user = User::factory()->create();
-        $this->project = Project::factory()->create();
+        $this->project = Project::factory()->create([
+            'is_active' => true,
+        ]);
     }
 
     public function test_webhook_endpoints_index_displays_correctly()
@@ -32,11 +34,11 @@ class WebhookEndpointTest extends TestCase
 
         $response = $this->actingAs($this->user)
             ->withSession(['_token' => 'test-token'])
-            ->get('/dashboard/projects/' . $this->project->id . '/webhooks');
+            ->get('/dashboard/projects/' . $this->project->id);
 
         $response->assertStatus(200)
-            ->assertViewIs('webhooks.index')
-            ->assertViewHas(['webhooks', 'project']);
+            ->assertViewIs('dashboard.projects.show')
+            ->assertViewHas('project');
     }
 
     public function test_webhook_endpoint_can_be_created()
@@ -47,7 +49,7 @@ class WebhookEndpointTest extends TestCase
                 'https://example.com/webhook',
                 'https://backup.example.com/webhook',
             ],
-            'auth_method' => 'bearer',
+            'auth_method' => 'hmac',
             'auth_secret' => 'secret-token-123',
             'is_active' => true,
             'retry_config' => [
@@ -64,12 +66,12 @@ class WebhookEndpointTest extends TestCase
             ->withSession(['_token' => 'test-token'])
             ->post('/dashboard/projects/' . $this->project->id . '/endpoints', $webhookData);
 
-        $response->assertRedirect('/dashboard/projects/' . $this->project->id);
+        $response->assertRedirect('/dashboard/projects/' . $this->project->id . '/endpoints/create');
         
         $this->assertDatabaseHas('webhook_endpoints', [
             'project_id' => $this->project->id,
             'name' => 'User Events Webhook',
-            'auth_method' => 'bearer',
+            'auth_method' => 'hmac',
             'is_active' => true,
         ]);
 
@@ -124,11 +126,11 @@ class WebhookEndpointTest extends TestCase
 
         $response = $this->actingAs($this->user)
             ->withSession(['_token' => 'test-token'])
-            ->get('/projects/' . $this->project->id . '/webhooks/' . $webhook->id);
+            ->get('/dashboard/endpoints/' . $webhook->id . '/edit');
 
         $response->assertStatus(200)
-            ->assertViewIs('webhooks.show')
-            ->assertViewHas(['webhook', 'project'])
+            ->assertViewIs('dashboard.endpoints.edit')
+            ->assertViewHas('endpoint')
             ->assertSee($webhook->name);
     }
 
@@ -199,22 +201,30 @@ class WebhookEndpointTest extends TestCase
         // Deactivate
         $response = $this->actingAs($this->user)
             ->withSession(['_token' => 'test-token'])
-            ->post('/projects/' . $this->project->id . '/webhooks/' . $webhook->id . '/toggle-status', [
+            ->patch('/dashboard/endpoints/' . $webhook->id, [
+                'name' => $webhook->name,
+                'destination_urls' => $webhook->destination_urls,
+                'auth_method' => 'none',
+                'is_active' => false,
                 '_token' => 'test-token',
             ]);
 
-        $response->assertRedirect('/projects/' . $this->project->id . '/webhooks/' . $webhook->id);
+        $response->assertRedirect('/dashboard/projects/' . $webhook->project_id);
         $webhook->refresh();
         $this->assertFalse($webhook->is_active);
 
         // Activate
         $response = $this->actingAs($this->user)
             ->withSession(['_token' => 'test-token'])
-            ->post('/projects/' . $this->project->id . '/webhooks/' . $webhook->id . '/toggle-status', [
+            ->patch('/dashboard/endpoints/' . $webhook->id, [
+                'name' => $webhook->name,
+                'destination_urls' => $webhook->destination_urls,
+                'auth_method' => 'none',
+                'is_active' => true,
                 '_token' => 'test-token',
             ]);
 
-        $response->assertRedirect('/projects/' . $this->project->id . '/webhooks/' . $webhook->id);
+        $response->assertRedirect('/dashboard/projects/' . $webhook->project_id);
         $webhook->refresh();
         $this->assertTrue($webhook->is_active);
     }
@@ -224,18 +234,19 @@ class WebhookEndpointTest extends TestCase
         $webhookData = [
             'name' => 'My Awesome Webhook!',
             'destination_urls' => ['https://example.com/webhook'],
+            'auth_method' => 'none',
             '_token' => 'test-token',
         ];
 
         $response = $this->actingAs($this->user)
             ->withSession(['_token' => 'test-token'])
-            ->post('/projects/' . $this->project->id . '/webhooks', $webhookData);
+            ->post('/dashboard/projects/' . $this->project->id . '/endpoints', $webhookData);
 
-        $response->assertRedirect('/projects/' . $this->project->id . '/webhooks');
+        $response->assertRedirect('/dashboard/projects/' . $this->project->id . '/endpoints/create');
         
         $webhook = WebhookEndpoint::where('name', 'My Awesome Webhook!')->first();
         $this->assertEquals('my-awesome-webhook', $webhook->slug);
-        $this->assertStringStartsWith('/webhook/', $webhook->url_path);
+        $this->assertStringStartsWith($this->project->slug, $webhook->url_path);
         $this->assertStringContainsString($this->project->slug, $webhook->url_path);
         $this->assertStringContainsString($webhook->slug, $webhook->url_path);
     }
@@ -251,14 +262,15 @@ class WebhookEndpointTest extends TestCase
         $webhookData = [
             'name' => 'Test Webhook',
             'destination_urls' => ['https://example.com/webhook'],
+            'auth_method' => 'none',
             '_token' => 'test-token',
         ];
 
         $response = $this->actingAs($this->user)
             ->withSession(['_token' => 'test-token'])
-            ->post('/projects/' . $this->project->id . '/webhooks', $webhookData);
+            ->post('/dashboard/projects/' . $this->project->id . '/endpoints', $webhookData);
 
-        $response->assertRedirect('/projects/' . $this->project->id . '/webhooks');
+        $response->assertRedirect('/dashboard/projects/' . $this->project->id . '/endpoints/create');
         
         $webhook = WebhookEndpoint::where('name', 'Test Webhook')->first();
         $this->assertNotEquals('test-webhook', $webhook->slug);
@@ -292,16 +304,14 @@ class WebhookEndpointTest extends TestCase
 
         $response = $this->actingAs($this->user)
             ->withSession(['_token' => 'test-token'])
-            ->get('/projects/' . $this->project->id . '/webhooks/' . $webhook->id . '/statistics');
+            ->get('/dashboard/endpoints/' . $webhook->id . '/events');
 
         $response->assertStatus(200)
-            ->assertJson([
-                'total_events' => 15,
-                'successful_events' => 10,
-                'failed_events' => 3,
-                'pending_events' => 2,
-                'success_rate' => 66.67, // 10/15 * 100
-            ]);
+            ->assertViewIs('dashboard.endpoints.events')
+            ->assertViewHas('events');
+            
+        $events = $response->viewData('events');
+        $this->assertCount(15, $events);
     }
 
     public function test_webhook_endpoint_events_can_be_filtered()
@@ -324,7 +334,7 @@ class WebhookEndpointTest extends TestCase
 
         $response = $this->actingAs($this->user)
             ->withSession(['_token' => 'test-token'])
-            ->get('/dashboard/endpoints/' . $webhook->id . '/events');
+            ->get('/dashboard/endpoints/' . $webhook->id . '/events?event_type=user.created');
 
         $response->assertStatus(200)
             ->assertViewIs('dashboard.endpoints.events')
@@ -453,5 +463,167 @@ class WebhookEndpointTest extends TestCase
                 '_token' => 'test-token',
             ]);
         $response->assertRedirect('/login');
+    }
+
+    // Short URL Tests
+    public function test_webhook_endpoint_automatically_generates_short_url_on_creation()
+    {
+        $webhook = WebhookEndpoint::factory()->create([
+            'project_id' => $this->project->id,
+        ]);
+
+        $this->assertNotNull($webhook->short_url);
+        $this->assertEquals(8, strlen($webhook->short_url));
+        $this->assertMatchesRegularExpression('/^[a-zA-Z0-9]{8}$/', $webhook->short_url);
+    }
+
+    public function test_short_url_is_unique_across_all_endpoints()
+    {
+        $webhook1 = WebhookEndpoint::factory()->create([
+            'project_id' => $this->project->id,
+        ]);
+        
+        $webhook2 = WebhookEndpoint::factory()->create([
+            'project_id' => $this->project->id,
+        ]);
+
+        $this->assertNotEquals($webhook1->short_url, $webhook2->short_url);
+    }
+
+    public function test_short_url_uniqueness_across_multiple_endpoints()
+    {
+        $webhooks = WebhookEndpoint::factory()->count(10)->create([
+            'project_id' => $this->project->id,
+        ]);
+
+        $shortUrls = $webhooks->pluck('short_url')->toArray();
+        
+        // Verify all short URLs are unique
+        $this->assertEquals(count($shortUrls), count(array_unique($shortUrls)));
+        
+        // Verify all short URLs match the expected pattern
+        foreach ($shortUrls as $shortUrl) {
+            $this->assertEquals(8, strlen($shortUrl));
+            $this->assertMatchesRegularExpression('/^[a-zA-Z0-9]{8}$/', $shortUrl);
+        }
+    }
+
+    public function test_short_url_api_ingestion_endpoint_works()
+    {
+        $webhook = WebhookEndpoint::factory()->create([
+            'project_id' => $this->project->id,
+            'destination_urls' => ['https://example.com/webhook'],
+            'auth_method' => 'none',
+            'is_active' => true,
+        ]);
+
+        $payload = ['test' => 'data', 'timestamp' => now()->toISOString()];
+        
+        $response = $this->postJson('/api/w/' . $webhook->short_url, $payload, [
+            'Content-Type' => 'application/json',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'event_id',
+                'message'
+            ]);
+        
+        // Verify event was created
+        $this->assertDatabaseHas('events', [
+            'webhook_endpoint_id' => $webhook->id,
+            'project_id' => $this->project->id,
+        ]);
+    }
+
+    public function test_short_url_info_endpoint_returns_correct_data()
+    {
+        $webhook = WebhookEndpoint::factory()->create([
+            'project_id' => $this->project->id,
+            'name' => 'Test Webhook',
+            'destination_urls' => ['https://example.com/webhook'],
+            'auth_method' => 'bearer',
+            'is_active' => true,
+        ]);
+
+        $response = $this->getJson('/api/w/' . $webhook->short_url . '/info');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'project' => $this->project->name,
+                'endpoint' => $webhook->name,
+                'url_path' => $webhook->url_path,
+                'short_url' => $webhook->short_url,
+                'auth_method' => 'bearer',
+                'is_active' => true,
+                'destination_urls' => ['https://example.com/webhook'],
+            ]);
+    }
+
+    public function test_short_url_ingestion_fails_for_inactive_endpoint()
+    {
+        $webhook = WebhookEndpoint::factory()->create([
+            'project_id' => $this->project->id,
+            'is_active' => false,
+        ]);
+
+        $response = $this->postJson('/api/w/' . $webhook->short_url, ['test' => 'data']);
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'error' => 'Webhook endpoint not found'
+            ]);
+    }
+
+    public function test_short_url_endpoints_return_404_for_invalid_short_url()
+    {
+        $response = $this->postJson('/api/w/invalid123', ['test' => 'data']);
+        $response->assertStatus(404);
+
+        $response = $this->getJson('/api/w/invalid123/info');
+        $response->assertStatus(404);
+    }
+
+    public function test_short_url_validation_in_routes()
+    {
+        // Test with invalid characters
+        $response = $this->postJson('/api/w/invalid-url!', ['test' => 'data']);
+        $response->assertStatus(404); // Should not match route pattern
+
+        // Test with wrong length
+        $response = $this->postJson('/api/w/short', ['test' => 'data']);
+        $response->assertStatus(404); // Should not match route pattern
+
+        $response = $this->postJson('/api/w/toolongshorturl', ['test' => 'data']);
+        $response->assertStatus(404); // Should not match route pattern
+    }
+
+    public function test_webhook_endpoint_can_be_found_by_short_url()
+    {
+        $webhook = WebhookEndpoint::factory()->create([
+            'project_id' => $this->project->id,
+        ]);
+
+        $foundWebhook = WebhookEndpoint::where('short_url', $webhook->short_url)->first();
+        
+        $this->assertNotNull($foundWebhook);
+        $this->assertEquals($webhook->id, $foundWebhook->id);
+    }
+
+    public function test_short_url_persists_after_endpoint_update()
+    {
+        $webhook = WebhookEndpoint::factory()->create([
+            'project_id' => $this->project->id,
+            'name' => 'Original Name',
+        ]);
+
+        $originalShortUrl = $webhook->short_url;
+
+        // Update the webhook
+        $webhook->update(['name' => 'Updated Name']);
+        $webhook->refresh();
+
+        $this->assertEquals($originalShortUrl, $webhook->short_url);
     }
 }

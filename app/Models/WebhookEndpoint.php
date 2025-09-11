@@ -16,6 +16,7 @@ class WebhookEndpoint extends Model
         'name',
         'slug',
         'url_path',
+        'short_url',
         'destination_urls',
         'auth_method',
         'auth_secret',
@@ -45,6 +46,26 @@ class WebhookEndpoint extends Model
         return $this->hasMany(Event::class);
     }
 
+    public function transformations(): HasMany
+    {
+        return $this->hasMany(WebhookTransformation::class);
+    }
+
+    public function activeTransformations(): HasMany
+    {
+        return $this->transformations()->active()->orderedByPriority();
+    }
+
+    public function routingRules(): HasMany
+    {
+        return $this->hasMany(WebhookRoutingRule::class);
+    }
+
+    public function activeRoutingRules(): HasMany
+    {
+        return $this->routingRules()->active()->orderedByPriority();
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -54,11 +75,29 @@ class WebhookEndpoint extends Model
                 $endpoint->slug = Str::slug($endpoint->name);
             }
             if (empty($endpoint->url_path)) {
-                $endpoint->url_path = '/webhook/' . $endpoint->project->slug . '/' . $endpoint->slug;
+                $project = Project::find($endpoint->project_id);
+                $endpoint->url_path = $project->slug . '/' . $endpoint->slug;
             }
             if (empty($endpoint->auth_secret) && $endpoint->auth_method !== 'none') {
                 $endpoint->auth_secret = Str::random(32);
             }
-        });
+            
+            // Generate unique short URL
+             if (empty($endpoint->short_url)) {
+                 $endpoint->short_url = static::generateUniqueShortUrl();
+             }
+         });
+    }
+
+    /**
+     * Generate a unique short URL for the webhook endpoint
+     */
+    private static function generateUniqueShortUrl(): string
+    {
+        do {
+            $shortUrl = Str::random(8);
+        } while (static::where('short_url', $shortUrl)->exists());
+        
+        return $shortUrl;
     }
 }

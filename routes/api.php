@@ -17,13 +17,21 @@ use App\Http\Controllers\HealthController;
 |
 */
 
-// Webhook ingestion endpoint
-Route::post('/webhook/{urlPath}', [WebhookController::class, 'handleIncomingWebhook'])
-    ->where('urlPath', '[a-zA-Z0-9\-_]+');
+// Webhook ingestion endpoint (original format)
+Route::post('/webhook/{urlPath}', [WebhookController::class, 'handle'])
+    ->where('urlPath', '[a-zA-Z0-9\-_/]+');
 
-// Get webhook endpoint info
-Route::get('/webhook/{urlPath}/info', [WebhookController::class, 'getWebhookInfo'])
-    ->where('urlPath', '[a-zA-Z0-9\-_]+');
+// Webhook ingestion endpoint (short URL format)
+Route::post('/w/{shortUrl}', [WebhookController::class, 'handleShort'])
+    ->where('shortUrl', '[a-zA-Z0-9]{8}');
+
+// Get webhook endpoint info (original format)
+Route::get('/webhook/{urlPath}/info', [WebhookController::class, 'info'])
+    ->where('urlPath', '[a-zA-Z0-9\-_/]+');
+
+// Get webhook endpoint info (short URL format)
+Route::get('/w/{shortUrl}/info', [WebhookController::class, 'infoShort'])
+    ->where('shortUrl', '[a-zA-Z0-9]{8}');
 
 // Webhook Management API (requires API key authentication)
 Route::prefix('v1')->middleware('api.auth')->group(function () {

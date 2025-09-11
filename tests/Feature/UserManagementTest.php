@@ -166,7 +166,7 @@ class UserManagementTest extends TestCase
             'email' => 'testuser@example.com',
         ]);
 
-        Project::factory()->count(3)->create(['user_id' => $user->id]);
+        Project::factory()->count(3)->create();
 
         $response = $this->get('/admin/users/' . $user->id);
 

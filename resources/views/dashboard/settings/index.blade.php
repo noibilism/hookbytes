@@ -1,11 +1,8 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Settings') }}
-        </h2>
-    </x-slot>
+@extends('layouts.master')
 
-    <script src="https://cdn.tailwindcss.com"></script>
+@section('title', 'Settings - HookBytes Dashboard')
+
+@push('styles')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -17,18 +14,12 @@
             font-family: 'JetBrains Mono', monospace;
         }
     </style>
+@endpush
 
+@section('content')
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Main Content -->
+            <!-- Main Content -->
         <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
             <!-- Header -->
             <div class="mb-6">
@@ -215,7 +206,9 @@
             </div>
         </div>
     </div>
-    
+@endsection
+
+@push('scripts')
     <script>
         // Toggle Add User Form
         function toggleAddUserForm() {
@@ -368,4 +361,5 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+    </script>
+@endpush

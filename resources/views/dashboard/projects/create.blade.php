@@ -1,27 +1,8 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Create Project') }}
-        </h2>
-    </x-slot>
+@extends('layouts.master')
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .font-mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
-    </style>
+@section('title', 'Create Project - HookBytes Dashboard')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+@section('content')
 
         <!-- Main Content -->
         <div class="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -106,8 +87,4 @@
                     </div>
                 </form>
             </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</x-app-layout>
+@endsection

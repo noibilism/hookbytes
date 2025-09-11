@@ -112,6 +112,39 @@ HookBytes is built on a modern, scalable architecture:
 6. **Access the dashboard**
    Open `http://localhost:8000` and create your first project!
 
+## ✨ New Features - Testing Framework
+
+### 🎯 Comprehensive Test Suite
+This iteration introduces a robust testing framework with 6 specialized test categories:
+
+- **🔄 Integration Workflow Tests** (`IntegrationWorkflowTest.php`) - Complete webhook lifecycle testing
+- **🔒 Security Tests** (`SecurityTest.php`) - Authentication, authorization, and security validation
+- **⚠️ Error Handling Tests** (`ErrorHandlingTest.php`) - Edge cases and failure scenario coverage
+- **🌐 API Endpoint Tests** (`ApiEndpointTest.php`) - Comprehensive API route testing
+- **⚡ Performance Tests** (`PerformanceTest.php`) - Load testing and optimization validation
+- **🖥️ UI Interaction Tests** (`UiInteractionTest.php`) - Frontend and user experience testing
+
+### 🚀 Automated Test Runner
+New `run-test-scenarios.sh` script provides:
+- **One-command testing** - Run all scenarios with a single command
+- **Selective testing** - Run specific test categories
+- **Environment auto-setup** - Automatic test environment configuration
+- **Detailed reporting** - Comprehensive test results and summaries
+- **CI/CD ready** - Perfect for automated pipelines
+
+### 📋 Test Coverage Highlights
+- **74+ test methods** across all application layers
+- **End-to-end workflows** from webhook receipt to delivery
+- **Security validation** for all authentication mechanisms
+- **Performance benchmarks** for high-load scenarios
+- **Error resilience** testing for production reliability
+
+### 🛠️ Developer Experience
+- **Easy setup** - No complex configuration required
+- **Fast execution** - Optimized test performance
+- **Clear documentation** - Comprehensive guides in `TEST_SCENARIOS.md`
+- **Extensible framework** - Easy to add new test scenarios
+
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -207,18 +240,93 @@ Once created, your webhook endpoints are available at:
 https://your-domain.com/api/webhook/{project-slug}/{endpoint-slug}
 ```
 
-## 🧪 Testing
+## 🧪 Testing & Quality Assurance
+
+HookBytes includes a comprehensive test suite with 74+ test scenarios covering all aspects of the application.
+
+### 🎯 Test Categories
+
+- **Integration Tests** - End-to-end webhook workflows
+- **Security Tests** - Authentication, authorization, and data protection
+- **Error Handling Tests** - Edge cases and failure scenarios
+- **API Endpoint Tests** - Complete API coverage
+- **Performance Tests** - Load testing and optimization
+- **UI Interaction Tests** - Frontend and user experience
+
+### 🚀 Quick Testing
 
 ```bash
-# Run tests
+# Run all test scenarios
+./run-test-scenarios.sh
+
+# Run with coverage analysis
+./run-test-scenarios.sh --coverage
+
+# Run specific test category
+./run-test-scenarios.sh --test integration
+./run-test-scenarios.sh --test security
+./run-test-scenarios.sh --test performance
+
+# Run existing Laravel tests
 php artisan test
 
-# Run with coverage
-php artisan test --coverage
-
-# Test specific feature
-php artisan test --filter=WebhookTest
+# Get help and see all options
+./run-test-scenarios.sh --help
 ```
+
+### 📊 Test Scenarios Overview
+
+| Test Category | Test Count | Coverage |
+|---------------|------------|----------|
+| **Integration Workflow** | 9 tests | End-to-end webhook lifecycle, retry mechanisms, bulk operations |
+| **Security & Auth** | 13 tests | Authentication, authorization, input validation, CSRF protection |
+| **Error Handling** | 18 tests | Edge cases, malformed data, timeout scenarios, concurrent processing |
+| **API Endpoints** | 12 tests | All API routes, response formats, rate limiting, authentication |
+| **Performance** | 10 tests | Load testing, memory usage, database optimization, caching |
+| **UI Interaction** | 12 tests | Frontend functionality, form validation, responsive design |
+
+### 🔧 Test Environment Setup
+
+The test suite automatically configures the testing environment:
+
+```bash
+# Test environment is auto-configured
+# - Creates .env.testing from .env.example
+# - Generates application encryption key
+# - Sets up test database
+# - Configures Laravel factories and seeders
+```
+
+### 📈 Continuous Integration
+
+Integrate with CI/CD pipelines:
+
+```yaml
+# GitHub Actions example
+name: Test Suite
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Install Dependencies
+        run: composer install
+      - name: Run Test Scenarios
+        run: ./run-test-scenarios.sh --coverage
+```
+
+### 📚 Test Documentation
+
+Comprehensive test documentation available in [`TEST_SCENARIOS.md`](TEST_SCENARIOS.md) including:
+- Detailed test scenario descriptions
+- Setup and configuration instructions
+- Troubleshooting guide
+- Best practices for test development
 
 ## 🛠 CLI Commands
 
@@ -287,6 +395,13 @@ HookBytes is open-source software licensed under the [MIT License](LICENSE).
 
 ## 🗺 Roadmap
 
+### ✅ Recently Completed
+- [x] **Comprehensive Test Suite**: 74+ test scenarios across 6 categories
+- [x] **Automated Test Runner**: One-command testing with detailed reporting
+- [x] **CI/CD Integration**: Ready-to-use pipeline configurations
+- [x] **Test Documentation**: Complete testing guides and best practices
+
+### 🚀 Upcoming Features
 - [ ] **Webhook Transformations**: Transform payloads before delivery
 - [ ] **Advanced Filtering**: Complex event filtering and routing
 - [ ] **Webhook Proxy**: Proxy mode for development environments
@@ -295,6 +410,12 @@ HookBytes is open-source software licensed under the [MIT License](LICENSE).
 - [ ] **GraphQL API**: Alternative to REST API
 - [ ] **Real-time Dashboard**: WebSocket-based live updates
 - [ ] **Webhook Analytics**: Advanced analytics and insights
+
+### 🧪 Testing Enhancements
+- [ ] **Visual Regression Testing**: UI component testing
+- [ ] **Load Testing Dashboard**: Real-time performance monitoring
+- [ ] **Test Data Management**: Advanced test data generation
+- [ ] **Cross-browser Testing**: Automated browser compatibility tests
 
 ## 🌟 Star History
 
